@@ -1,0 +1,27 @@
+{
+  "short_name": "Mirror Cell",
+  "name": "MIRROR CELL - Sistem Manajemen Service HP",
+  "description": "Sistem Manajemen Service HP Hardware & Software",
+  "id": "./",
+  "start_url": "./index.html",
+  "scope": "./",
+  "background_color": "#09090b",
+  "theme_color": "#09090b",
+  "display": "standalone",
+  "orientation": "portrait",
+  "categories": ["business", "utilities"],
+  "icons": [
+    {
+      "src": "https://images.unsplash.com/photo-1595079676339-1534801ad6cf?w=192&auto=format&fit=crop&q=80",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://images.unsplash.com/photo-1595079676339-1534801ad6cf?w=512&auto=format&fit=crop&q=80",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ]
+}
