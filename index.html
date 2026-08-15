@@ -11,7 +11,7 @@
 
   <title>MIRROR CELL - Sistem Manajemen Service HP</title>
 
-  <!-- PWA Manifest & Icons -->
+  <!-- PWA Manifest & Icon -->
   <link rel="manifest" href="./manifest.json" />
   <link rel="apple-touch-icon" href="https://images.unsplash.com/photo-1595079676339-1534801ad6cf?w=192&auto=format&fit=crop&q=80" />
 
@@ -20,21 +20,249 @@
   <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body class="bg-zinc-950 text-zinc-100 antialiased min-h-screen selection:bg-indigo-500 selection:text-white">
 
-  <!-- Root App Container -->
   <div id="root"></div>
 
-  <!-- Kode Aplikasi React Anda -->
   <script type="text/babel">
+    const { useState, useEffect } = React;
+
     const App = () => {
+      const [services, setServices] = useState(() => {
+        const saved = localStorage.getItem('mirror_cell_services');
+        return saved ? JSON.parse(saved) : [];
+      });
+
+      const [formData, setFormData] = useState({
+        customerName: '',
+        phoneModel: '',
+        damage: '',
+        estimatedCost: '',
+        status: 'Proses'
+      });
+
+      const [searchQuery, setSearchQuery] = useState('');
+      const [filterStatus, setFilterStatus] = useState('Semua');
+
+      useEffect(() => {
+        localStorage.setItem('mirror_cell_services', JSON.stringify(services));
+      }, [services]);
+
+      const handleInputChange = (e) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({ ...prev, [name]: value }));
+      };
+
+      const handleSubmit = (e) => {
+        e.preventDefault();
+        if (!formData.customerName || !formData.phoneModel) return;
+
+        const newEntry = {
+          id: 'MC-' + Date.now().toString().slice(-6),
+          date: new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }),
+          ...formData,
+          estimatedCost: Number(formData.estimatedCost) || 0
+        };
+
+        setServices([newEntry, ...services]);
+        setFormData({ customerName: '', phoneModel: '', damage: '', estimatedCost: '', status: 'Proses' });
+      };
+
+      const handleStatusChange = (id, newStatus) => {
+        setServices(services.map(item => item.id === id ? { ...item, status: newStatus } : item));
+      };
+
+      const handleDelete = (id) => {
+        if (confirm('Hapus data service ini?')) {
+          setServices(services.filter(item => item.id !== id));
+        }
+      };
+
+      const filteredServices = services.filter(item => {
+        const matchesSearch = item.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                              item.phoneModel.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                              item.id.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesFilter = filterStatus === 'Semua' || item.status === filterStatus;
+        return matchesSearch && matchesFilter;
+      });
+
+      const totalIncome = services
+        .filter(s => s.status === 'Selesai')
+        .reduce((acc, curr) => acc + curr.estimatedCost, 0);
+
       return (
-        <div class="flex flex-col items-center justify-center min-h-screen p-4 text-center">
-          <h1 class="text-3xl font-bold text-indigo-500 mb-2">MIRROR CELL</h1>
-          <p class="text-zinc-400 max-w-md">
-            Sistem Manajemen Service HP Siap Digunakan & Di-build ke APK/AAB.
-          </p>
+        <div class="max-w-4xl mx-auto p-4 md:p-6 space-y-6">
+          <!-- Header -->
+          <header class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-zinc-800 pb-4 gap-4">
+            <div>
+              <h1 class="text-2xl md:text-3xl font-bold tracking-tight text-indigo-400">MIRROR CELL</h1>
+              <p class="text-xs md:text-sm text-zinc-400">Sistem Manajemen Service HP Hardware & Software</p>
+            </div>
+            <div class="bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-2 text-right w-full sm:w-auto">
+              <span class="text-xs text-zinc-500 block">Total Pendapatan (Selesai)</span>
+              <span class="text-lg font-bold text-emerald-400">
+                Rp {totalIncome.toLocaleString('id-ID')}
+              </span>
+            </div>
+          </header>
+
+          <!-- Form Input Nota Service -->
+          <section class="bg-zinc-900/60 border border-zinc-800 rounded-xl p-4 md:p-5">
+            <h2 class="text-lg font-semibold mb-4 text-zinc-200">Tambah Nota Service Baru</h2>
+            <form onSubmit={handleSubmit} class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs text-zinc-400 mb-1">Nama Pelanggan</label>
+                <input
+                  type="text"
+                  name="customerName"
+                  value={formData.customerName}
+                  onChange={handleInputChange}
+                  placeholder="Contoh: Budi"
+                  required
+                  class="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-indigo-500"
+                />
+              </div>
+
+              <div>
+                <label class="block text-xs text-zinc-400 mb-1">Tipe / Model HP</label>
+                <input
+                  type="text"
+                  name="phoneModel"
+                  value={formData.phoneModel}
+                  onChange={handleInputChange}
+                  placeholder="Contoh: Redmi Note 5 Pro"
+                  required
+                  class="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-indigo-500"
+                />
+              </div>
+
+              <div class="md:col-span-2">
+                <label class="block text-xs text-zinc-400 mb-1">Kerusakan / Keluhan</label>
+                <input
+                  type="text"
+                  name="damage"
+                  value={formData.damage}
+                  onChange={handleInputChange}
+                  placeholder="Contoh: Ganti LCD, IC Power, Mati Total"
+                  class="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-indigo-500"
+                />
+              </div>
+
+              <div>
+                <label class="block text-xs text-zinc-400 mb-1">Estimasi Biaya (Rp)</label>
+                <input
+                  type="number"
+                  name="estimatedCost"
+                  value={formData.estimatedCost}
+                  onChange={handleInputChange}
+                  placeholder="150000"
+                  class="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-indigo-500"
+                />
+              </div>
+
+              <div>
+                <label class="block text-xs text-zinc-400 mb-1">Status Penanganan</label>
+                <select
+                  name="status"
+                  value={formData.status}
+                  onChange={handleInputChange}
+                  class="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-indigo-500"
+                >
+                  <option value="Proses">Proses</option>
+                  <option value="Menunggu Part">Menunggu Part</option>
+                  <option value="Selesai">Selesai</option>
+                  <option value="Batal">Batal</option>
+                </select>
+              </div>
+
+              <div class="md:col-span-2">
+                <button
+                  type="submit"
+                  class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-2.5 rounded-lg transition-colors text-sm"
+                >
+                  Simpan Nota Service
+                </button>
+              </div>
+            </form>
+          </section>
+
+          <!-- Filter & Pencarian -->
+          <section class="flex flex-col sm:flex-row gap-3 justify-between items-center">
+            <input
+              type="text"
+              placeholder="Cari ID, Pelanggan, atau HP..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              class="w-full sm:w-64 bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500"
+            />
+
+            <div class="flex gap-2 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0">
+              {['Semua', 'Proses', 'Menunggu Part', 'Selesai', 'Batal'].map(st => (
+                <button
+                  key={st}
+                  onClick={() => setFilterStatus(st)}
+                  class={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${
+                    filterStatus === st 
+                      ? 'bg-indigo-600 text-white' 
+                      : 'bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-zinc-200'
+                  }`}
+                >
+                  {st}
+                </button>
+              ))}
+            </div>
+          </section>
+
+          <!-- Daftar Service -->
+          <section class="space-y-3">
+            {filteredServices.length === 0 ? (
+              <div class="text-center py-10 bg-zinc-900/30 border border-zinc-800/50 rounded-xl text-zinc-500 text-sm">
+                Belum ada data service recorded.
+              </div>
+            ) : (
+              filteredServices.map(item => (
+                <div key={item.id} class="bg-zinc-900/80 border border-zinc-800 rounded-xl p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                  <div class="space-y-1">
+                    <div class="flex items-center gap-2">
+                      <span class="text-xs font-mono bg-zinc-800 px-2 py-0.5 rounded text-indigo-300">{item.id}</span>
+                      <span class="text-xs text-zinc-500">{item.date}</span>
+                    </div>
+                    <h3 class="font-bold text-zinc-100 text-base">{item.customerName} - <span class="text-zinc-400 font-normal">{item.phoneModel}</span></h3>
+                    <p class="text-xs text-zinc-400">Kerusakan: {item.damage || '-'}</p>
+                    <p class="text-xs font-semibold text-emerald-400">Biaya: Rp {item.estimatedCost.toLocaleString('id-ID')}</p>
+                  </div>
+
+                  <div class="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end border-t sm:border-t-0 border-zinc-800/80 pt-3 sm:pt-0">
+                    <select
+                      value={item.status}
+                      onChange={(e) => handleStatusChange(item.id, e.target.value)}
+                      class={`text-xs px-2.5 py-1.5 rounded-lg border focus:outline-none font-medium ${
+                        item.status === 'Selesai' ? 'bg-emerald-950/60 text-emerald-300 border-emerald-800' :
+                        item.status === 'Proses' ? 'bg-amber-950/60 text-amber-300 border-amber-800' :
+                        item.status === 'Menunggu Part' ? 'bg-blue-950/60 text-blue-300 border-blue-800' :
+                        'bg-red-950/60 text-red-300 border-red-800'
+                      }`}
+                    >
+                      <option value="Proses">Proses</option>
+                      <option value="Menunggu Part">Menunggu Part</option>
+                      <option value="Selesai">Selesai</option>
+                      <option value="Batal">Batal</option>
+                    </select>
+
+                    <button
+                      onClick={() => handleDelete(item.id)}
+                      class="text-xs text-red-400 hover:text-red-300 px-2 py-1 bg-red-950/30 border border-red-900/50 rounded-lg"
+                    >
+                      Hapus
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
+          </section>
         </div>
       );
     };
@@ -48,8 +276,8 @@
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('./sw.js')
-          .then((reg) => console.log('Service Worker registered successfully:', reg.scope))
-          .catch((err) => console.error('Service Worker registration failed:', err));
+          .then((reg) => console.log('SW Registered:', reg.scope))
+          .catch((err) => console.error('SW Registration Failed:', err));
       });
     }
   </script>
