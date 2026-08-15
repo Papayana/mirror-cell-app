@@ -11,7 +11,7 @@
 
   <title>MIRROR CELL - Sistem Manajemen Service HP</title>
 
-  <!-- PWA Manifest & Icon -->
+  <!-- PWA Manifest & Icons -->
   <link rel="manifest" href="./manifest.json" />
   <link rel="apple-touch-icon" href="https://images.unsplash.com/photo-1595079676339-1534801ad6cf?w=192&auto=format&fit=crop&q=80" />
 
@@ -20,8 +20,6 @@
   <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-  <!-- Lucide Icons -->
-  <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body class="bg-zinc-950 text-zinc-100 antialiased min-h-screen selection:bg-indigo-500 selection:text-white">
 
@@ -33,7 +31,10 @@
     const App = () => {
       const [services, setServices] = useState(() => {
         const saved = localStorage.getItem('mirror_cell_services');
-        return saved ? JSON.parse(saved) : [];
+        return saved ? JSON.parse(saved) : [
+          { id: 'MC-849201', date: '15 Agt 2026', customerName: 'Ahmad', phoneModel: 'Redmi Note 5 Pro', damage: 'Ganti LCD & Baterai', estimatedCost: 250000, status: 'Proses' },
+          { id: 'MC-730192', date: '14 Agt 2026', customerName: 'Dian', phoneModel: 'Samsung A52', damage: 'Mati Total / IC Power', estimatedCost: 450000, status: 'Menunggu Part' }
+        ];
       });
 
       const [formData, setFormData] = useState({
@@ -109,7 +110,7 @@
             </div>
           </header>
 
-          <!-- Form Input Nota Service -->
+          <!-- Form Input Nota -->
           <section class="bg-zinc-900/60 border border-zinc-800 rounded-xl p-4 md:p-5">
             <h2 class="text-lg font-semibold mb-4 text-zinc-200">Tambah Nota Service Baru</h2>
             <form onSubmit={handleSubmit} class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -220,7 +221,7 @@
           <section class="space-y-3">
             {filteredServices.length === 0 ? (
               <div class="text-center py-10 bg-zinc-900/30 border border-zinc-800/50 rounded-xl text-zinc-500 text-sm">
-                Belum ada data service recorded.
+                Belum ada data service.
               </div>
             ) : (
               filteredServices.map(item => (
